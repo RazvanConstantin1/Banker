@@ -81,6 +81,14 @@ const displayMovements = function (movements) {
 };
 displayMovements(account1.movements);
 
+// Calculating and displaying the balance
+const calcAndDisplayBalance = function (movements) {
+  const balance = movements.reduce((acc, mov) => acc + mov, 0);
+
+  labelBalance.textContent = `${balance} EUR`;
+};
+calcAndDisplayBalance(account1.movements);
+
 // Computing Usernames
 const createUsernames = function (accs) {
   accs.forEach(function (acc) {
@@ -94,3 +102,5 @@ const createUsernames = function (accs) {
 
 createUsernames(accounts);
 console.log(accounts);
+
+// const movements = [200, 450, -400, 3000, -650, -130, 70, 1300];
