@@ -145,11 +145,7 @@ const calcDisplaySummary = function (account) {
     .filter((mov) => mov > 0)
     .reduce((acc, mov) => acc + mov, 0);
 
-  labelSumIn.textContent = formatCur(
-    account.balance,
-    account.locale,
-    account.currency
-  );
+  labelSumIn.textContent = formatCur(incomes, account.locale, account.currency);
 
   const outcomes = account.movements
     .filter((mov) => mov < 0)
@@ -197,16 +193,36 @@ const updateUI = function (account) {
   calcDisplaySummary(account);
 };
 
+const startLogOutTImer = function () {
+  const tick = function () {
+    const min = String(Math.trunc(time / 60)).padStart(2, "0");
+    const sec = String(time % 60).padStart(2, "0");
+    // In each call, print the remaining time to UI
+    labelTimer.textContent = `${min}:${sec}`;
+
+    // When 0 seconds, stop timer and log out the user
+    if (time === 0) {
+      clearInterval(timer);
+      labelWelcome.textContent = "Log in to get started";
+      containerApp.style.opacity = 0;
+    }
+
+    // Decrease 1s
+    time--;
+  };
+  // Set time to 5 minutes
+  let time = 300;
+
+  // Call the timers every second
+  const timer = setInterval(tick, 1000);
+
+  return timer;
+};
+
 // EVENT HANDLERS
-let currentAccount;
+let currentAccount, timer;
 
-// FAKED ALWAYS LOGGED IN
-currentAccount = account1;
-updateUI(currentAccount);
-containerApp.style.opacity = 100;
-
-// Experimenting with API
-
+// Login
 btnLogin.addEventListener("click", function (e) {
   // Prevent form from submmiting (stop the page to reload)
   e.preventDefault();
@@ -243,6 +259,10 @@ btnLogin.addEventListener("click", function (e) {
 
     inputLoginPin.blur();
 
+    // Log Out TIMER
+    if (timer) clearInterval(timer);
+    timer = startLogOutTImer();
+
     // Update UI
     updateUI(currentAccount);
   }
@@ -258,14 +278,20 @@ btnLoan.addEventListener("click", function (e) {
     amount > 0 &&
     currentAccount.movements.some((mov) => mov >= amount * 0.1)
   ) {
-    // Add movement
-    currentAccount.movements.push(amount);
+    setTimeout(function () {
+      // Add movement
+      currentAccount.movements.push(amount);
 
-    // Add Loan Date
-    currentAccount.movementsDates.push(new Date().toISOString());
+      // Add Loan Date
+      currentAccount.movementsDates.push(new Date().toISOString());
 
-    // Update UI
-    updateUI(currentAccount);
+      // Update UI
+      updateUI(currentAccount);
+    }, 2500);
+
+    // Reset the timer
+    clearInterval(timer);
+    timer = startLogOutTImer();
   }
 
   inputLoanAmount.value = "";
@@ -315,24 +341,12 @@ btnTransfer.addEventListener("click", function (e) {
     // Add the transfer date
     currentAccount.movementsDates.push(new Date().toISOString());
     receiverAcc.movementsDates.push(new Date().toISOString());
+
     // Update UI
     updateUI(currentAccount);
+
+    // Reset the timer
+    clearInterval(timer);
+    timer = startLogOutTImer();
   }
 });
-
-const num = 3884764.23;
-
-const options = {
-  style: "currency",
-  unit: "celsius",
-  currency: "EUR",
-  // useGrouping: true,
-};
-
-console.log("US", new Intl.NumberFormat("en-US", options).format(num));
-console.log("Germany", new Intl.NumberFormat("de-DE", options).format(num));
-console.log("Syria:", new Intl.NumberFormat("ar-SY", options).format(num));
-console.log(
-  navigator.language,
-  new Intl.NumberFormat(navigator.language, options).format(num)
-);
